@@ -3,38 +3,52 @@ let currentUser = null;
 const peer = new Peer();
 let currentConn;
 
-// --- ÜYELİK SİSTEMİ ---
+// --- ÜYELİK SİSTEMİ (BURASI GÜNCELLENDİ) ---
 function toggleAuth() {
     isLoginMode = !isLoginMode;
-    document.getElementById('authTitle').innerText = isLoginMode ? "Giriş Yap" : "Kayıt Ol";
-    document.getElementById('authBtn').innerText = isLoginMode ? "Giriş Yap" : "Kayıt Ol";
-    document.getElementById('toggleBtn').innerText = isLoginMode ? "Hesabın yok mu? Kayıt Ol" : "Zaten hesabın var mı? Giriş Yap";
+    const title = document.getElementById('authTitle');
+    const btn = document.getElementById('authBtn');
+    const toggle = document.getElementById('toggleBtn');
+    
+    if (!isLoginMode) {
+        title.innerText = "Kayıt Ol";
+        btn.innerText = "Kayıt Ol";
+        toggle.innerText = "Zaten hesabın var mı? Giriş Yap";
+    } else {
+        title.innerText = "Giriş Yap";
+        btn.innerText = "Giriş Yap";
+        toggle.innerText = "Hesabın yok mu? Kayıt Ol";
+    }
 }
 
 function handleAuth() {
     const user = document.getElementById('userInput').value.trim();
     const pass = document.getElementById('passInput').value.trim();
 
-    if (!user || !pass) return alert("Boş bırakma kral!");
+    if (user === "" || pass === "") {
+        alert("Aga kullanıcı adı veya şifreyi boş bırakma!");
+        return;
+    }
 
+    // Yerel hafızayı çekiyoruz
     let users = JSON.parse(localStorage.getItem('dublajUsers') || '{}');
 
     if (isLoginMode) {
-        // GİRİŞ YAP
+        // GİRİŞ MANTIĞI
         if (users[user] && users[user] === pass) {
             loginSuccess(user);
         } else {
-            alert("Kullanıcı adı veya şifre yanlış reis!");
+            alert("Kullanıcı adı veya şifre yanlış reis! Kayıt oldun mu?");
         }
     } else {
-        // KAYIT OL
+        // KAYIT MANTIĞI
         if (users[user]) {
-            alert("Bu isim zaten alınmış aga, başka bir tane seç!");
+            alert("Bu kullanıcı adı kapılmış aga, başka bir tane dene.");
         } else {
             users[user] = pass;
             localStorage.setItem('dublajUsers', JSON.stringify(users));
-            alert("Kayıt başarılı! Şimdi giriş yapabilirsin.");
-            toggleAuth();
+            alert("Kayıt Başarılı! Şimdi giriş yapabilirsin kral.");
+            toggleAuth(); // Kayıttan sonra giriş moduna geri döner
         }
     }
 }
@@ -46,12 +60,14 @@ function loginSuccess(user) {
     document.getElementById('welcomeText').innerText = "🎙 Hoş Geldin " + user;
 }
 
-// --- PEER & DM SİSTEMİ ---
-peer.on('open', (id) => { document.getElementById('myIdDisplay').innerText = id; });
+// --- PEER & SESLİ SOHBET ---
+peer.on('open', (id) => { 
+    document.getElementById('myIdDisplay').innerText = id; 
+});
 
 function startCall() {
     const rId = document.getElementById('remoteId').value;
-    if(!rId) return alert("ID girmeden nereye?");
+    if(!rId) return alert("ID girmeden bağlanamazsın!");
     currentConn = peer.connect(rId);
     setupChat(currentConn);
     
@@ -91,34 +107,10 @@ function addMsg(s, t) {
     b.scrollTop = b.scrollHeight;
 }
 
-function playStream(s) { const a = new Audio(); a.srcObject = s; a.play(); }
+function playStream(s) { 
+    const a = new Audio(); 
+    a.srcObject = s; 
+    a.play(); 
+}
 
 // --- KAYIT & KRONOMETRE ---
-let timer; let secs = 0; let recorder; let chunks = [];
-
-function startRecording() {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(s => {
-        recorder = new MediaRecorder(s);
-        secs = 0; timer = setInterval(() => {
-            secs++;
-            let m = Math.floor(secs/60); let sc = secs%60;
-            document.getElementById('recordTimer').innerText = (m<10?'0'+m:m)+":"+(sc<10?'0'+sc:sc);
-        }, 1000);
-        recorder.ondataavailable = e => chunks.push(e.data);
-        recorder.onstop = () => {
-            const b = new Blob(chunks, {type:'audio/ogg'});
-            const u = URL.createObjectURL(b);
-            document.getElementById('audioArea').innerHTML = `<audio controls src="${u}"></audio>`;
-            chunks = [];
-        };
-        recorder.start();
-        document.getElementById('startBtn').disabled = true;
-        document.getElementById('stopBtn').disabled = false;
-    });
-}
-
-function stopRecording() {
-    recorder.stop(); clearInterval(timer);
-    document.getElementById('startBtn').disabled = false;
-    document.getElementById('stopBtn').disabled = true;
-}
