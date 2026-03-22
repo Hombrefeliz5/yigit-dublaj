@@ -5,31 +5,37 @@ let mediaRecorder;
 let chunks = [];
 let timerInterval;
 let seconds = 0;
+let myUsername = "Anonim";
 
-// 1. ŞİFRE SİSTEMİ (Şifre: yigit2026)
+// 1. GİRİŞ VE USERNAME SİSTEMİ
 function checkPass() {
+    const user = document.getElementById('userInput').value;
     const pass = document.getElementById('passInput').value;
+    
+    if(user.length < 2) return alert("Düzgün bir username seç aga!");
     if(pass === "yigit2026") {
+        myUsername = user;
+        document.getElementById('welcomeText').innerText = "🎙 Hoş Geldin " + myUsername;
         document.getElementById('loginOverlay').style.display = 'none';
     } else {
-        alert("Yanlış şifre reis, giremezsin!");
+        alert("Şifre yanlış kral!");
     }
 }
 
-// 2. PEER BAĞLANTISI (ID ALMA)
+// 2. PEER BAĞLANTISI
 peer.on('open', (id) => {
     document.getElementById('myIdDisplay').innerText = id;
 });
 
 document.getElementById('copyBtn').onclick = () => {
     navigator.clipboard.writeText(document.getElementById('myIdDisplay').innerText);
-    alert("ID kopyalandı, karşı tarafa atabilirsin!");
+    alert("ID kopyalandı!");
 };
 
-// 3. ARAMA VE SESLİ SOHBET
+// 3. DM BAŞLATMA VE SESLİ
 document.getElementById('callBtn').onclick = () => {
     const rId = document.getElementById('remoteId').value;
-    if(!rId) return alert("Önce bir ID girmelisin aga!");
+    if(!rId) return alert("Bağlanılacak ID lazım!");
     
     currentConn = peer.connect(rId);
     setupChat(currentConn);
@@ -61,19 +67,22 @@ function uiConnect() {
     document.getElementById('hangupBtn').style.display = 'inline-block';
 }
 
-document.getElementById('hangupBtn').onclick = () => {
-    location.reload(); // En temiz kapatma yolu
-};
+document.getElementById('hangupBtn').onclick = () => { location.reload(); };
 
-// 4. MESAJLAŞMA
+// 4. DM KUTUSU (USERNAME DAHİL)
 function setupChat(conn) {
-    conn.on('data', (data) => { addMessage("Karşı Taraf", data); });
+    conn.on('data', (data) => { 
+        // Gelen veriyi (username:mesaj) şeklinde ayırıyoruz
+        const parts = data.split("||");
+        addMessage(parts[0], parts[1]); 
+    });
 }
 
 document.getElementById('sendBtn').onclick = () => {
     const msg = document.getElementById('msgInput').value;
     if(msg && currentConn) {
-        currentConn.send(msg);
+        // Mesajı kullanıcı adınla beraber gönderiyoruz
+        currentConn.send(myUsername + "||" + msg);
         addMessage("Sen", msg);
         document.getElementById('msgInput').value = "";
     }
@@ -83,7 +92,7 @@ function addMessage(sender, text) {
     const box = document.getElementById('chatBox');
     const msgDiv = document.createElement('div');
     msgDiv.className = 'msg';
-    msgDiv.innerHTML = `<b>${sender}:</b> ${text}`;
+    msgDiv.innerHTML = `<span class="user-tag">${sender}</span>${text}`;
     box.appendChild(msgDiv);
     box.scrollTop = box.scrollHeight;
 }
@@ -94,7 +103,7 @@ function playStream(stream) {
     audio.play();
 }
 
-// 5. ÖDEV KAYDI VE KRONOMETRE
+// 5. KRONOMETRE VE KAYIT
 function updateTimer() {
     seconds++;
     let mins = Math.floor(seconds / 60);
@@ -106,11 +115,9 @@ function updateTimer() {
 document.getElementById('start').onclick = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(stream);
-    
     seconds = 0;
     document.getElementById('recordTimer').innerText = "00:00";
     timerInterval = setInterval(updateTimer, 1000);
-
     mediaRecorder.ondataavailable = e => chunks.push(e.data);
     mediaRecorder.onstop = () => {
         clearInterval(timerInterval);
@@ -122,7 +129,6 @@ document.getElementById('start').onclick = async () => {
         document.getElementById('audioArea').appendChild(audio);
         chunks = [];
     };
-    
     mediaRecorder.start();
     document.getElementById('start').disabled = true;
     document.getElementById('stop').disabled = false;
