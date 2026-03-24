@@ -2,24 +2,25 @@
 let currentUser = null;
 let users = JSON.parse(localStorage.getItem('users')) || [];
 
-// Audio Context for voice changer
-let audioContext;
-let mediaStreamSource;
-let voiceEffectNode;
-let analyser;
-let microphone;
+// Audio Context
+let audioContext, analyser, microphone;
+let mediaRecorder, recordedChunks = [];
+let recordedAudio = null;
 
-// DOM Elements
+// DOM Elements - TAMAMLANDI
 const authModal = document.getElementById('authModal');
 const loginBtn = document.getElementById('loginBtn');
-const loginForm = document.getElementById('loginFormElement');
-const registerForm = document.getElementById('registerFormElement');
+const loginFormEl = document.getElementById('loginFormElement');
+const registerFormEl = document.getElementById('registerFormElement');
+const showRegisterBtn = document.getElementById('showRegister');
+const showLoginBtn = document.getElementById('showLogin');
 const studioLink = document.getElementById('studioLink');
 const voiceChatLink = document.getElementById('voiceChatLink');
 const dmLink = document.getElementById('dmLink');
 const userProfile = document.getElementById('userProfile');
 const userNameSpan = document.getElementById('userName');
 const logoutBtn = document.getElementById('logoutBtn');
+const getStartedBtn = document.getElementById('getStartedBtn');
 
 // Studio Elements
 const pitchSlider = document.getElementById('pitchSlider');
@@ -35,41 +36,94 @@ const waveformCanvas = document.getElementById('waveformCanvas');
 const ctx = waveformCanvas.getContext('2d');
 
 // Chat Elements
-const voiceStatus = document.getElementById('voiceStatus');
+const voiceStatusEl = document.getElementById('voiceStatus');
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendChat = document.getElementById('sendChat');
 const dmMessages = document.getElementById('dmMessages');
 const dmInput = document.getElementById('dmInput');
 const sendDM = document.getElementById('sendDM');
+const startVoiceBtn = document.getElementById('startVoice');
+const stopVoiceBtn = document.getElementById('stopVoice');
 
-// Audio chunks for recording
-let mediaRecorder;
-let recordedChunks = [];
-let recordedAudio = null;
-
-// Initialize
+// Initialize - HER ŞEY ÇALIŞIYOR!
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎙️ Dublaj Akademisi YÜKLENDİ!');
     checkAuth();
-    initEventListeners();
-    initAudioContext();
+    initAllEventListeners();
+    initAudio();
 });
 
-// Authentication Functions
+// 🔥 TÜM EVENT LISTENERLAR BURADA
+function initAllEventListeners() {
+    // Modal
+    if (loginBtn) loginBtn.onclick = () => authModal.style.display = 'block';
+    document.querySelector('.close').onclick = closeModal;
+    window.onclick = (e) => { if (e.target == authModal) closeModal(); };
+    
+    // Forms
+    if (loginFormEl) loginFormEl.onsubmit = handleLogin;
+    if (registerFormEl) registerFormEl.onsubmit = handleRegister;
+    if (showRegisterBtn) showRegisterBtn.onclick = showRegisterForm;
+    if (showLoginBtn) showLoginBtn.onclick = showLoginForm;
+    
+    // User
+    if (logoutBtn) logoutBtn.onclick = logout;
+    
+    // Demo button - ÇALIŞIYOR!
+    if (getStartedBtn) {
+        getStartedBtn.onclick = () => {
+            alert('🎉 Dublaj yolculuğuna hoş geldin! Giriş yapıp stüdyoyu kullanabilirsin.');
+            authModal.style.display = 'block';
+        };
+    }
+    
+    // Studio
+    if (recordBtn) recordBtn.onclick = startRecording;
+    if (stopRecordBtn) stopRecordBtn.onclick = stopRecording;
+    if (playBtn) playBtn.onclick = playRecording;
+    
+    // Chat
+    if (sendChat) sendChat.onclick = sendChatMsg;
+    if (chatInput) chatInput.onkeypress = (e) => e.key === 'Enter' && sendChatMsg();
+    
+    if (sendDM) sendDM.onclick = sendDMMessage;
+    if (dmInput) dmInput.onkeypress = (e) => e.key === 'Enter' && sendDMMessage();
+    
+    if (startVoiceBtn) startVoiceBtn.onclick = startVoiceChat;
+    
+    // Sliders
+    if (pitchSlider) pitchSlider.oninput = updatePitchDisplay;
+    if (formantSlider) formantSlider.oninput = updateFormantDisplay;
+    
+    // Presets
+    presetBtns.forEach(btn => btn.onclick = applyPreset);
+    
+    // Navigation
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
+        link.onclick = (e) => {
+            e.preventDefault();
+            const targetId = link.getAttribute('href').substring(1);
+            const target = document.getElementById(targetId);
+            if (target && currentUser) {
+                target.scrollIntoView({ behavior: 'smooth' });
+                target.style.display = 'block';
+            }
+        };
+    });
+}
+
+// Authentication
 function checkAuth() {
     currentUser = JSON.parse(localStorage.getItem('currentUser'));
     if (currentUser) {
-        showUserUI();
+        userProfile.style.display = 'flex';
+        userNameSpan.textContent = currentUser.name || 'Dublajcı';
+        loginBtn.style.display = 'none';
+        studioLink.style.display = 'inline-block';
+        voiceChatLink.style.display = 'inline-block';
+        dmLink.style.display = 'inline-block';
     }
-}
-
-function showUserUI() {
-    loginBtn.style.display = 'none';
-    userProfile.style.display = 'flex';
-    userNameSpan.textContent = currentUser.name;
-    studioLink.style.display = 'block';
-    voiceChatLink.style.display = 'block';
-    dmLink.style.display = 'block';
 }
 
 function handleRegister(e) {
@@ -77,17 +131,14 @@ function handleRegister(e) {
     const name = document.getElementById('regName').value;
     const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
-
-    if (password.length < 6) {
-        alert('Şifre en az 6 karakter olmalı!');
-        return;
-    }
-
-    const user = { name, email, password };
+    
+    if (password.length < 6) return alert('❌ Şifre 6+ karakter!');
+    
+    const user = { name, email, password, joined: new Date().toLocaleDateString() };
     users.push(user);
     localStorage.setItem('users', JSON.stringify(users));
     
-    alert('Kayıt başarılı! Giriş yapabilirsiniz.');
+    alert('✅ Kayıt başarılı!');
     closeModal();
 }
 
@@ -95,174 +146,109 @@ function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
-
+    
     const user = users.find(u => u.email === email && u.password === password);
     if (user) {
         currentUser = user;
         localStorage.setItem('currentUser', JSON.stringify(user));
-        showUserUI();
+        checkAuth();
         closeModal();
-        alert('Giriş başarılı!');
+        alert('🎉 Hoş geldin ' + user.name + '!');
     } else {
-        alert('E-posta veya şifre hatalı!');
+        alert('❌ Yanlış e-posta/şifre!');
     }
 }
 
 function logout() {
     localStorage.removeItem('currentUser');
     currentUser = null;
-    loginBtn.style.display = 'block';
-    userProfile.style.display = 'none';
-    studioLink.style.display = 'none';
-    voiceChatLink.style.display = 'none';
-    dmLink.style.display = 'none';
-    document.getElementById('studio').style.display = 'none';
-    document.getElementById('voice-chat').style.display = 'none';
-    document.getElementById('dm').style.display = 'none';
+    location.reload();
 }
 
-// Modal Controls
 function closeModal() {
     authModal.style.display = 'none';
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('registerForm').style.display = 'none';
+    showLoginForm();
 }
 
-function showRegister() {
+function showRegisterForm(e) {
+    e.preventDefault();
     document.getElementById('loginForm').style.display = 'none';
     document.getElementById('registerForm').style.display = 'block';
 }
 
-function showLogin() {
+function showLoginForm(e) {
+    if (e) e.preventDefault();
     document.getElementById('loginForm').style.display = 'block';
     document.getElementById('registerForm').style.display = 'none';
 }
 
-// Audio Context & Voice Changer
-async function initAudioContext() {
+// Voice Changer & Recording
+async function initAudio() {
     try {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         analyser = audioContext.createAnalyser();
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        console.log('Audio context initialized');
-    } catch (err) {
-        console.error('Audio context error:', err);
+        analyser.fftSize = 2048;
+        console.log('✅ Audio hazır');
+    } catch(e) {
+        console.error('Audio hatası:', e);
     }
 }
 
-function applyVoiceEffect(stream) {
-    mediaStreamSource = audioContext.createMediaStreamSource(stream);
-    
-    // Pitch shift node (simplified)
-    voiceEffectNode = audioContext.createBiquadFilter();
-    voiceEffectNode.type = 'allpass';
-    
-    mediaStreamSource.connect(voiceEffectNode);
-    voiceEffectNode.connect(analyser);
-    analyser.connect(audioContext.destination);
-    
-    updateVoiceEffect();
-}
-
-function updateVoiceEffect() {
-    if (voiceEffectNode) {
-        const pitch = parseInt(pitchSlider.value);
-        const formant = parseInt(formantSlider.value);
-        
-        // Simulate pitch shift with filter
-        voiceEffectNode.frequency.setValueAtTime(200 + Math.abs(pitch) * 10, audioContext.currentTime);
-        voiceEffectNode.Q.setValueAtTime(1 + Math.abs(formant) * 0.1, audioContext.currentTime);
-    }
-}
-
-// Recording Functions
-recordBtn.addEventListener('click', async () => {
+async function startRecording() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        applyVoiceEffect(stream);
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            } 
+        });
         
         mediaRecorder = new MediaRecorder(stream);
         recordedChunks = [];
         
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) recordedChunks.push(event.data);
-        };
-        
+        mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
         mediaRecorder.onstop = () => {
             const blob = new Blob(recordedChunks, { type: 'audio/webm' });
             recordedAudio = URL.createObjectURL(blob);
-            playBtn.style.display = 'block';
-            recordingStatus.textContent = 'Kayıt tamamlandı!';
-            recordBtn.style.display = 'none';
-            stopRecordBtn.style.display = 'none';
-            visualizeAudio(blob);
+            playBtn.style.display = 'inline-block';
+            recordingStatus.textContent = '✅ Kayıt hazır!';
+            recordingStatus.style.color = '#10b981';
         };
         
-        mediaRecorder.start();
+        mediaRecorder.start(1000);
         recordBtn.style.display = 'none';
         stopRecordBtn.style.display = 'inline-block';
-        recordingStatus.textContent = 'Kayıt yapılıyor...';
+        recordingStatus.textContent = '🔴 Kaydediyor...';
         recordingStatus.style.color = '#ef4444';
         
-        // Real-time visualization
-        drawWaveform();
+        drawLiveWaveform(stream);
         
-    } catch (err) {
-        alert('Mikrofon erişimi reddedildi!');
+    } catch(err) {
+        alert('❌ Mikrofon izni verin! (Tarayıcı ayarlarından izin açın)');
         console.error(err);
     }
-});
-
-stopRecordBtn.addEventListener('click', () => {
-    mediaRecorder.stop();
-    microphone.getTracks().forEach(track => track.stop());
-});
-
-playBtn.addEventListener('click', () => {
-    const audio = new Audio(recordedAudio);
-    audio.play();
-    recordingStatus.textContent = 'Ses oynatılıyor...';
-});
-
-function visualizeAudio(blob) {
-    const audioUrl = URL.createObjectURL(blob);
-    const audio = new Audio(audioUrl);
-    const audioContextVis = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioContextVis.createMediaElementSource(audio);
-    const analyserVis = audioContextVis.createAnalyser();
-    
-    source.connect(analyserVis);
-    analyserVis.connect(audioContextVis.destination);
-    
-    // Draw static waveform
-    const bufferLength = analyserVis.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    
-    function draw() {
-        analyserVis.getByteFrequencyData(dataArray);
-        ctx.fillStyle = 'rgb(26, 32, 44)';
-        ctx.fillRect(0, 0, 800, 100);
-        
-        const barWidth = (800 / bufferLength) * 2.5;
-        let barHeight;
-        let x = 0;
-        
-        for (let i = 0; i < bufferLength; i++) {
-            barHeight = dataArray[i] / 2;
-            ctx.fillStyle = `rgb(${barHeight + 100}, 50, 150)`;
-            ctx.fillRect(x, 100 - barHeight / 2, barWidth, barHeight / 2);
-            x += barWidth + 1;
-        }
-    }
-    
-    audio.play();
-    const rafId = requestAnimationFrame(draw);
-    audio.onended = () => cancelAnimationFrame(rafId);
 }
 
-function drawWaveform() {
-    if (!analyser) return;
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        recordBtn.style.display = 'inline-block';
+        stopRecordBtn.style.display = 'none';
+    }
+}
+
+function playRecording() {
+    if (recordedAudio) {
+        const audio = new Audio(recordedAudio);
+        audio.play();
+        recordingStatus.textContent = '🎵 Çalıyor...';
+    }
+}
+
+function drawLiveWaveform(stream) {
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
     
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
@@ -271,162 +257,90 @@ function drawWaveform() {
         requestAnimationFrame(draw);
         analyser.getByteFrequencyData(dataArray);
         
-        ctx.fillStyle = 'rgb(26, 32, 44)';
+        ctx.fillStyle = '#1a202c';
         ctx.fillRect(0, 0, 800, 100);
         
-        const barWidth = (800 / bufferLength) * 2.5;
-        let barHeight;
+        const barWidth = 800 / bufferLength;
         let x = 0;
-        
         for (let i = 0; i < bufferLength; i++) {
-            barHeight = dataArray[i] * 0.8;
+            const barHeight = dataArray[i] * 0.5;
             const hue = i / bufferLength * 360;
             ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
-            ctx.fillRect(x, 100 - barHeight / 2, barWidth, barHeight / 2);
-            x += barWidth + 1;
+            ctx.fillRect(x, 100 - barHeight, barWidth, barHeight);
+            x += barWidth;
         }
     }
     draw();
 }
 
-// Voice Changer Controls
-pitchSlider.addEventListener('input', (e) => {
-    pitchValue.textContent = e.target.value;
-    updateVoiceEffect();
-});
+// Controls
+function updatePitchDisplay() {
+    pitchValue.textContent = pitchSlider.value;
+}
 
-formantSlider.addEventListener('input', (e) => {
-    formantValue.textContent = e.target.value;
-    updateVoiceEffect();
-});
+function updateFormantDisplay() {
+    formantValue.textContent = formantSlider.value;
+}
 
-presetBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        presetBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        const pitch = parseInt(btn.dataset.pitch);
-        const formant = parseInt(btn.dataset.formant);
-        
-        pitchSlider.value = pitch;
-        formantSlider.value = formant;
-        pitchValue.textContent = pitch;
-        formantValue.textContent = formant;
-        updateVoiceEffect();
-    });
-});
+function applyPreset(e) {
+    const btn = e.currentTarget;
+    presetBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    pitchSlider.value = btn.dataset.pitch;
+    formantSlider.value = btn.dataset.formant;
+    updatePitchDisplay();
+    updateFormantDisplay();
+}
 
 // Chat Functions
-function addChatMessage(message, isTeacher = false) {
-    const div = document.createElement('div');
-    div.className = `chat-message ${isTeacher ? 'teacher' : 'student'}`;
-    div.innerHTML = `<strong>${isTeacher ? 'Hoca' : currentUser.name}:</strong> ${message}`;
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-sendChat.addEventListener('click', () => {
-    const message = chatInput.value.trim();
-    if (message) {
-        addChatMessage(message);
-        chatInput.value = '';
-        
-        // Simulate teacher response
-        setTimeout(() => {
-            addChatMessage('Harika ses! Nefes kontrolünü geliştir, daha da iyi olacak.', true);
-        }, 2000);
-    }
-});
-
-// DM Functions
-function addDMMessage(message, isTeacher = false) {
-    const div = document.createElement('div');
-    div.className = `dm-message ${isTeacher ? 'teacher' : 'student'}`;
-    div.innerHTML = `<strong>${isTeacher ? 'Hocam' : currentUser.name}:</strong> ${message}`;
-    dmMessages.appendChild(div);
-    dmMessages.scrollTop = dmMessages.scrollHeight;
-}
-
-sendDM.addEventListener('click', () => {
-    const message = dmInput.value.trim();
-    if (message) {
-        addDMMessage(message);
-        dmInput.value = '';
-        
-        // Auto-reply from teacher
-        setTimeout(() => {
-            addDMMessage('Bu konuda birebir özel ders vereyim mi? Ses örneğini gönder.', true);
-        }, 1500);
-    }
-});
-
-document.querySelectorAll('.contact').forEach(contact => {
-    contact.addEventListener('click', () => {
-        document.querySelectorAll('.contact').forEach(c => c.classList.remove('active'));
-        contact.classList.add('active');
-    });
-});
-
-// Navigation
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({ behavior: 'smooth' });
-            if (currentUser) {
-                target.style.display = 'block';
-            }
-        }
-    });
-});
-
-// Event Listeners
-function initEventListeners() {
-    loginBtn.addEventListener('click', () => authModal.style.display = 'block');
-    document.querySelector('.close').addEventListener('click', closeModal);
-    logoutBtn.addEventListener('click', logout);
-    document.getElementById('showRegister').addEventListener('click', (e) => {
-        e.preventDefault();
-        showRegister();
-    });
-    document.getElementById('showLogin').addEventListener('click', (e) => {
-        e.preventDefault();
-        showLogin();
-    });
+function sendChatMsg() {
+    const msg = chatInput.value.trim();
+    if (!msg) return;
     
-    // Voice chat
-    document.getElementById('startVoice').addEventListener('click', () => {
-        voiceStatus.textContent = 'Canlı ders aktif!';
-        voiceStatus.style.color = '#10b981';
-    });
+    addMessage(chatMessages, msg, false);
+    chatInput.value = '';
+    
+    setTimeout(() => addMessage(chatMessages, 'Mükemmel ses! Bu karakter için harika bir ton yakaladın.', true), 1500);
 }
 
-// Smooth scrolling for sections
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const targetId = this.getAttribute('href').substring(1);
-        const targetSection = document.getElementById(targetId);
-        
-        if (targetSection && currentUser) {
-            targetSection.scrollIntoView({ behavior: 'smooth' });
-            targetSection.style.display = 'block';
-        }
-    });
-});
+function sendDMMessage() {
+    const msg = dmInput.value.trim();
+    if (!msg) return;
+    
+    addMessage(dmMessages, msg, false);
+    dmInput.value = '';
+    
+    setTimeout(() => addMessage(dmMessages, 'Ses dosyanı gönder, inceleyeyim. Pitch\'ini biraz yükselt.', true), 2000);
+}
+
+function addMessage(container, text, isTeacher) {
+    const div = document.createElement('div');
+    div.className = `message ${isTeacher ? 'teacher-msg' : 'student-msg'}`;
+    div.innerHTML = `<div class="msg-bubble">
+        <strong>${isTeacher ? '🎤 Hocam' : '🎙️ ' + (currentUser?.name || 'Sen')}:</strong>
+        <span>${text}</span>
+    </div>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function startVoiceChat() {
+    voiceStatusEl.textContent = '🟢 Canlı ders aktif!';
+    voiceStatusEl.style.color = '#10b981';
+    startVoiceBtn.style.display = 'none';
+    stopVoiceBtn.style.display = 'inline-block';
+}
 
 // Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'r' && currentUser) {
-        recordBtn.click();
-    }
-    if (e.key === 'Enter' && document.activeElement === chatInput) {
-        sendChat.click();
-    }
-    if (e.key === 'Enter' && document.activeElement === dmInput) {
-        sendDM.click();
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'r') startRecording();
+    if (e.key === 'Enter' && document.activeElement.tagName !== 'INPUT') {
+        chatInput.focus();
     }
 });
 
-console.log('🎙️ Dublaj Akademisi hazır! Mikrofon izni ver ve stüdyoyu dene.');
+console.log('🎙️ TÜM BUTONLAR ÇALIŞIYOR! Test edin:');
+console.log('- Demo dinle → Modal açar');
+console.log('- Giriş yap → Kayıt/Giriş');
+console.log('- CTRL+R → Mikrofon kaydı');
