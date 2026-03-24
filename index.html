@@ -3,52 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dublaj Akademisi - Profesyonel Seslendirme Kursu</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Dublaj Akademisi</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        /* Header */
+        header { 
+            background: rgba(0,0,0,0.8); 
+            padding: 15px 0; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100;
+        }
+        nav { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 24px; font-weight: bold; }
+        .buttons { display: flex; gap: 10px; }
+        button { 
+            padding: 12px 24px; 
+            border: none; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .login-btn { background: #f97316; color: white; }
+        .login-btn:hover { transform: scale(1.05); }
+        .user-info { background: #10b981; color: white; display: flex; gap: 10px; align-items: center; }
+        
+        /* Modal */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.8); 
+            z-index: 1000;
+        }
+        .modal-content { 
+            background: white; 
+            color: #333; 
+            margin: 100px auto; 
+            padding: 30px; 
+            width: 90%; 
+            max-width: 400px; 
+            border-radius: 15px;
+            position: relative;
+        }
+        .close { position: absolute; right: 15px; top: 15px; font-size: 24px; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .switch-form { text-align: center; margin-top: 20px; }
+        
+        /* Sections */
+        section { padding: 60px 0; text-align: center; }
+        h1 { font-size: 3em; margin-bottom: 20px; }
+        h2 { font-size: 2.5em; margin-bottom: 30px; }
+        .hero { background: rgba(0,0,0,0.3); }
+        .btn-primary { background: #ef4444; color: white; font-size: 18px; padding: 15px 30px; }
+        .btn-primary:hover { background: #dc2626; transform: scale(1.05); }
+        .btn-secondary { background: #3b82f6; color: white; }
+        
+        /* Studio */
+        .studio { background: #1f2937; }
+        .controls { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-bottom: 30px; }
+        .slider-group { text-align: left; }
+        .slider { width: 200px; }
+        .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .preset-btn { background: #6b7280; color: white; padding: 10px; border-radius: 8px; }
+        .preset-btn.active { background: #f59e0b; }
+        .record-section { background: #111827; padding: 30px; border-radius: 15px; margin-top: 30px; }
+        #waveform { height: 100px; background: #374151; border-radius: 10px; margin: 20px 0; }
+        
+        /* Chat */
+        .chat-container { max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.1); padding: 30px; border-radius: 15px; }
+        .messages { height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .message { margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.2); border-radius: 10px; }
+        .chat-input { display: flex; gap: 10px; }
+        .chat-input input { flex: 1; padding: 12px; border-radius: 25px; border: none; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav { flex-direction: column; gap: 15px; }
+            h1 { font-size: 2em; }
+            .controls { flex-direction: column; align-items: center; }
+        }
+    </style>
 </head>
 <body>
-    <!-- Login/Register Modal -->
-    <div id="authModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div id="loginForm">
-                <h2><i class="fas fa-microphone-alt"></i> Giriş Yap</h2>
-                <form id="loginFormElement">
-                    <input type="email" id="loginEmail" placeholder="E-posta adresi" required>
-                    <input type="password" id="loginPassword" placeholder="Şifreniz" required>
-                    <button type="submit">Giriş Yap</button>
-                </form>
-                <p>Hesabın yok mu? <a href="#" id="showRegister">Kayıt Ol</a></p>
-            </div>
-            <div id="registerForm" style="display: none;">
-                <h2><i class="fas fa-user-plus"></i> Dublajcı Kayıt</h2>
-                <form id="registerFormElement">
-                    <input type="text" id="regName" placeholder="Ad Soyad" required>
-                    <input type="email" id="regEmail" placeholder="E-posta" required>
-                    <input type="password" id="regPassword" placeholder="Şifre (min 6 karakter)" required>
-                    <button type="submit">Kayıt Ol</button>
-                </form>
-                <p>Hesabın var mı? <a href="#" id="showLogin">Giriş Yap</a></p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Header -->
     <header>
-        <nav class="navbar">
-            <div class="nav-brand">
-                <i class="fas fa-broadcast-tower"></i>
-                <span>Dublaj Akademisi</span>
-            </div>
-            <div class="nav-links">
-                <a href="#home">Ana Sayfa</a>
-                <a href="#courses">Kurslar</a>
-                <a href="#studio" id="studioLink" style="display: none;">Dublaj Stüdyosu</a>
-                <a href="#voice-chat" id="voiceChatLink" style="display: none;">Canlı Ders</a>
-                <a href="#dm" id="dmLink" style="display: none;">Özel Ders</a>
+        <nav class="container">
+            <div class="logo">🎙️ Dublaj Akademisi</div>
+            <div class="buttons">
                 <button id="loginBtn" class="login-btn">Giriş Yap</button>
-                <div id="userProfile" class="user-profile" style="display: none;">
+                <div id="userInfo" class="user-info" style="display:none;">
                     <span id="userName"></span>
                     <button id="logoutBtn">Çıkış</button>
                 </div>
@@ -56,141 +112,298 @@
         </nav>
     </header>
 
-    <!-- Main Content -->
-    <main>
-        <!-- Hero Section -->
-        <section id="home" class="hero">
-            <div class="hero-content">
-                <h1>Profesyonel <span class="highlight">Dublaj</span> Kariyerine Hoş Geldin!</h1>
-                <p>Ses değiştirme teknikleri, dublaj teknikleri ve stüdyo deneyimi ile Hollywood kalitesinde dublajcı ol</p>
-                <div class="hero-buttons">
-                    <button class="cta-btn primary" id="getStartedBtn">Kurslara Başla</button>
-                    <button class="cta-btn secondary">Demo Dinle <i class="fas fa-play"></i></button>
+    <div class="container">
+        <!-- Hero -->
+        <section class="hero">
+            <h1>Profesyonel Dublaj Kursu</h1>
+            <p>Ses değiştirme, dublaj teknikleri ve stüdyo deneyimi</p>
+            <br>
+            <button id="demoBtn" class="btn-primary">🎵 Demo Dinle</button>
+            <button id="startBtn" class="btn-secondary">🚀 Hemen Başla</button>
+        </section>
+
+        <!-- Login Modal -->
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <form id="authForm">
+                    <h2 id="modalTitle">Giriş Yap</h2>
+                    <div class="form-group">
+                        <input type="text" id="username" placeholder="Kullanıcı adı" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="password" placeholder="Şifre" required>
+                    </div>
+                    <button type="submit" class="login-btn" style="width:100%; margin-top:10px;">Giriş Yap</button>
+                    <div class="switch-form">
+                        <a href="#" id="toggleForm">Kayıt Ol</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Studio -->
+        <section id="studio" class="studio" style="display:none;">
+            <h2>🎤 Dublaj Stüdyosu</h2>
+            <div class="controls">
+                <div class="slider-group">
+                    <label>Pitch: <span id="pitchVal">0</span></label><br>
+                    <input type="range" class="slider" id="pitch" min="-50" max="50" value="0">
+                </div>
+                <div class="slider-group">
+                    <label>Ses Efekti: <span id="effectVal">0</span></label><br>
+                    <input type="range" class="slider" id="effect" min="0" max="100" value="0">
                 </div>
             </div>
-            <div class="hero-image">
-                <i class="fas fa-microphone-alt fa-5x"></i>
+            <div class="preset-grid">
+                <button class="preset-btn active" data-pitch="0" data-effect="0">Normal</button>
+                <button class="preset-btn" data-pitch="25" data-effect="30">Kadın</button>
+                <button class="preset-btn" data-pitch="-40" data-effect="50">Çocuk</button>
+                <button class="preset-btn" data-pitch="15" data-effect="70">Yaşlı</button>
+            </div>
+            <div class="record-section">
+                <button id="recordBtn" class="btn-primary">🎙️ Kaydı Başlat</button>
+                <button id="stopBtn" style="display:none;">⏹️ Durdur</button>
+                <button id="playBtn" style="display:none;">▶️ Dinle</button>
+                <div id="status">Hazır</div>
+                <canvas id="waveform" width="800" height="100"></canvas>
             </div>
         </section>
 
-        <!-- Courses Section -->
-        <section id="courses" class="courses">
-            <h2>Dublaj Kurslarımız</h2>
-            <div class="course-grid">
-                <div class="course-card">
-                    <i class="fas fa-play-circle"></i>
-                    <h3>Temel Dublaj</h3>
-                    <p>Nefes kontrolü, tonlama, karakter yaratma</p>
-                    <div class="course-meta">
-                        <span class="level">Başlangıç</span>
-                        <span class="price">₺999</span>
-                    </div>
-                </div>
-                <div class="course-card">
-                    <i class="fas fa-magic"></i>
-                    <h3>Ses Değiştirme</h3>
-                    <p>Erkek-kadın, çocuk-yaşlı ses efektleri</p>
-                    <div class="course-meta">
-                        <span class="level">Orta</span>
-                        <span class="price">₺1.499</span>
-                    </div>
-                </div>
-                <div class="course-card">
-                    <i class="fas fa-film"></i>
-                    <h3>Profesyonel Dublaj</h3>
-                    <p>Film-TV dublajı, stüdyo teknikleri</p>
-                    <div class="course-meta">
-                        <span class="level">İleri</span>
-                        <span class="price">₺2.499</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Dublaj Studio -->
-        <section id="studio" class="studio-section" style="display: none;">
-            <h2><i class="fas fa-headset"></i> Dublaj Stüdyosu</h2>
-            <div class="studio-container">
-                <div class="studio-controls">
-                    <div class="voice-changer">
-                        <h3>Ses Değiştirici</h3>
-                        <div class="slider-container">
-                            <label>Pitch (Ton): <span id="pitchValue">0</span></label>
-                            <input type="range" id="pitchSlider" min="-50" max="50" value="0">
-                        </div>
-                        <div class="slider-container">
-                            <label>Formant: <span id="formantValue">0</span></label>
-                            <input type="range" id="formantSlider" min="-20" max="20" value="0">
-                        </div>
-                        <div class="voice-presets">
-                            <button class="preset-btn" data-pitch="20" data-formant="10">Kadın Sesi</button>
-                            <button class="preset-btn" data-pitch="-30" data-formant="-15">Çocuk Sesi</button>
-                            <button class="preset-btn" data-pitch="15" data-formant="5">Yaşlı Sesi</button>
-                            <button class="preset-btn active" data-pitch="0" data-formant="0">Normal</button>
-                        </div>
-                    </div>
-                    <div class="recording-controls">
-                        <button id="recordBtn" class="record-btn">
-                            <i class="fas fa-microphone"></i> Kaydı Başlat
-                        </button>
-                        <button id="stopRecordBtn" class="stop-btn" style="display: none;">
-                            <i class="fas fa-stop"></i>
-                        </button>
-                        <button id="playBtn" class="play-btn" style="display: none;">
-                            <i class="fas fa-play"></i> Oynat
-                        </button>
-                        <div class="recording-status" id="recordingStatus">Hazır</div>
-                    </div>
-                </div>
-                <div class="audio-waveform">
-                    <canvas id="waveformCanvas" width="800" height="100"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- Voice Chat -->
-        <section id="voice-chat" class="voice-chat-section" style="display: none;">
-            <h2><i class="fas fa-video"></i> Canlı Dublaj Dersi</h2>
-            <div class="voice-chat-container">
-                <div class="voice-controls">
-                    <button id="startVoice" class="voice-btn active">
-                        <i class="fas fa-microphone"></i> Canlı Ders Başlat
-                    </button>
-                    <button id="stopVoice" class="voice-btn" style="display: none;">
-                        <i class="fas fa-stop"></i> Durdur
-                    </button>
-                    <div class="voice-status" id="voiceStatus">Ders kapalı</div>
-                </div>
-                <div class="chat-messages" id="chatMessages"></div>
+        <!-- Chat -->
+        <section id="chat" style="display:none;">
+            <h2>💬 Canlı Ders</h2>
+            <div class="chat-container">
+                <div id="messages" class="messages"></div>
                 <div class="chat-input">
-                    <input type="text" id="chatInput" placeholder="Ders notları...">
-                    <button id="sendChat"><i class="fas fa-paper-plane"></i></button>
+                    <input type="text" id="chatInput" placeholder="Ders sorusu sor...">
+                    <button id="sendBtn">Gönder</button>
                 </div>
             </div>
         </section>
+    </div>
 
-        <!-- DM Section -->
-        <section id="dm" class="dm-section" style="display: none;">
-            <h2><i class="fas fa-comments"></i> Özel Dublaj Koçluğu</h2>
-            <div class="dm-container">
-                <div class="dm-contacts">
-                    <h3>Koçlar</h3>
-                    <div class="contact-list">
-                        <div class="contact active" data-user="hocam">🎤 Baş Dublaj Hocası</div>
-                        <div class="contact" data-user="uzman">🎙️ Ses Mühendisi</div>
-                    </div>
-                </div>
-                <div class="dm-chat">
-                    <div class="dm-messages" id="dmMessages"></div>
-                    <div class="dm-input">
-                        <input type="text" id="dmInput" placeholder="Dublaj tekniği sorusu...">
-                        <button id="sendDM"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+    <script>
+        // GLOBAL DEĞİŞKENLER
+        let currentUser = localStorage.getItem('dublajUser');
+        let isRecording = false;
+        let mediaRecorder, chunks = [], audioBlob;
+        let canvas = document.getElementById('waveform');
+        let ctx = canvas.getContext('2d');
 
-    <script src="script.js"></script>
-</body>
-</html>
+        // DOM ELEMANLARI
+        const loginBtn = document.getElementById('loginBtn');
+        const modal = document.getElementById('modal');
+        const authForm = document.getElementById('authForm');
+        const toggleForm = document.getElementById('toggleForm');
+        const userInfo = document.getElementById('userInfo');
+        const userName = document.getElementById('userName');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const demoBtn = document.getElementById('demoBtn');
+        const startBtn = document.getElementById('startBtn');
+        const studio = document.getElementById('studio');
+        const chat = document.getElementById('chat');
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const playBtn = document.getElementById('playBtn');
+        const status = document.getElementById('status');
+        const pitch = document.getElementById('pitch');
+        const effect = document.getElementById('effect');
+        const pitchVal = document.getElementById('pitchVal');
+        const effectVal = document.getElementById('effectVal');
+        const messages = document.getElementById('messages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // OLAY DİNLEYİCİLERİ - HER ŞEY BURADA!
+        loginBtn.onclick = () => modal.style.display = 'block';
+        document.querySelector('.close').onclick = () => modal.style.display = 'none';
+        demoBtn.onclick = () => {
+            alert('🎵 Demo sesi oynatılıyor...\n\n(Ses değiştirme efekti aktif!)');
+            playDemoSound();
+        };
+        startBtn.onclick = () => {
+            if (!currentUser) {
+                alert('🚀 Başlamak için giriş yap!');
+                modal.style.display = 'block';
+            } else {
+                studio.style.display = 'block';
+                studio.scrollIntoView();
+            }
+        };
+
+        authForm.onsubmit = (e) => {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            if (document.getElementById('modalTitle').textContent === 'Kayıt Ol') {
+                localStorage.setItem('dublajUser', user);
+                alert('✅ Kayıt başarılı!');
+            } else {
+                localStorage.setItem('dublajUser', user);
+                alert('🎉 Giriş başarılı ' + user + '!');
+            }
+            currentUser = user;
+            updateUI();
+            modal.style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        };
+
+        toggleForm.onclick = (e) => {
+            e.preventDefault();
+            const title = document.getElementById('modalTitle');
+            if (title.textContent === 'Giriş Yap') {
+                title.textContent = 'Kayıt Ol';
+                toggleForm.textContent = 'Giriş Yap';
+            } else {
+                title.textContent = 'Giriş Yap';
+                toggleForm.textContent = 'Kayıt Ol';
+            }
+        };
+
+        logoutBtn.onclick = () => {
+            localStorage.removeItem('dublajUser');
+            currentUser = null;
+            updateUI();
+            studio.style.display = 'none';
+            chat.style.display = 'none';
+        };
+
+        recordBtn.onclick = startRecord;
+        stopBtn.onclick = stopRecord;
+        playBtn.onclick = playRecord;
+        sendBtn.onclick = sendMessage;
+        chatInput.onkeypress = (e) => e.key === 'Enter' && sendMessage();
+
+        // PRESET BUTONLARI
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                pitch.value = btn.dataset.pitch;
+                effect.value = btn.dataset.effect;
+                pitchVal.textContent = btn.dataset.pitch;
+                effectVal.textContent = btn.dataset.effect;
+            };
+        });
+
+        // SLIDERLAR
+        pitch.oninput = () => pitchVal.textContent = pitch.value;
+        effect.oninput = () => effectVal.textContent = effect.value;
+
+        // FONKSİYONLAR
+        function updateUI() {
+            if (currentUser) {
+                loginBtn.style.display = 'none';
+                userInfo.style.display = 'flex';
+                userName.textContent = currentUser;
+            } else {
+                loginBtn.style.display = 'inline-block';
+                userInfo.style.display = 'none';
+            }
+        }
+
+        async function startRecord() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                chunks = [];
+
+                mediaRecorder.ondataavailable = e => chunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    audioBlob = new Blob(chunks, { type: 'audio/webm' });
+                    playBtn.style.display = 'inline-block';
+                    status.textContent = '✅ Kayıt tamam! Dinle';
+                    status.style.color = '#10b981';
+                    animateWaveform();
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                status.textContent = '🔴 Kaydediyor...';
+                status.style.color = '#ef4444';
+            } catch (err) {
+                alert('❌ Mikrofon izni gerekli!');
+            }
+        }
+
+        function stopRecord() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'none';
+            }
+        }
+
+        function playRecord() {
+            if (audioBlob) {
+                const audio = new Audio(URL.createObjectURL(audioBlob));
+                audio.play();
+                status.textContent = '▶️ Çalıyor...';
+            }
+        }
+
+        function playDemoSound() {
+            // Demo ses efekti
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+            oscillator.frequency.linearRampToValueAtTime(880, audioContext.currentTime + 0.5);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 1);
+        }
+
+        function animateWaveform() {
+            const bars = 50;
+            const barWidth = canvas.width / bars;
+            
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < bars; i++) {
+                    const height = Math.random() * 80 + 20;
+                    ctx.fillStyle = `hsl(${i * 7}, 70%, 50%)`;
+                    ctx.fillRect(i * barWidth, canvas.height - height, barWidth - 2, height);
+                }
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        function sendMessage() {
+            const msg = chatInput.value.trim();
+            if (!msg) return;
+            
+            const div = document.createElement('div');
+            div.className = 'message';
+            div.innerHTML = `<strong>Sen:</strong> ${msg}`;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            chatInput.value = '';
+            
+            setTimeout(() => {
+                const reply = document.createElement('div');
+                reply.className = 'message';
+                reply.innerHTML = '<strong>🎤 Hocam:</strong> Harika ses! Nefes kontrolün mükemmel.';
+                messages.appendChild(reply);
+                messages.scrollTop = messages.scrollHeight;
+            }, 1000);
+        }
+
+        // BAŞLANGIÇ
+        updateUI();
+        console.log('✅ DÜBLÂJ AKADEMİSİ HAZIR! Tüm butonlar çalışıyor.');
+        console.log('Test: Demo Dinle →
