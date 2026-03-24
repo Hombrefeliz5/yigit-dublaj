@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eğitim Platformum - Online Kurslar</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Login/Register Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="loginForm">
+                <h2><i class="fas fa-sign-in-alt"></i> Giriş Yap</h2>
+                <form id="loginFormElement">
+                    <input type="email" id="loginEmail" placeholder="E-posta" required>
+                    <input type="password" id="loginPassword" placeholder="Şifre" required>
+                    <button type="submit">Giriş Yap</button>
+                </form>
+                <p>Hesabın yok mu? <a href="#" id="showRegister">Kayıt Ol</a></p>
+            </div>
+            <div id="registerForm" style="display: none;">
+                <h2><i class="fas fa-user-plus"></i> Kayıt Ol</h2>
+                <form id="registerFormElement">
+                    <input type="text" id="regName" placeholder="Ad Soyad" required>
+                    <input type="email" id="regEmail" placeholder="E-posta" required>
+                    <input type="password" id="regPassword" placeholder="Şifre" required>
+                    <button type="submit">Kayıt Ol</button>
+                </form>
+                <p>Hesabın var mı? <a href="#" id="showLogin">Giriş Yap</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Eğitim Platformum</span>
+            </div>
+            <div class="nav-links">
+                <a href="#home">Ana Sayfa</a>
+                <a href="#courses">Kurslar</a>
+                <a href="#chat" id="chatLink" style="display: none;">Canlı Sohbet</a>
+                <a href="#dm" id="dmLink" style="display: none;">DM</a>
+                <button id="loginBtn" class="login-btn">Giriş Yap</button>
+                <div id="userProfile" class="user-profile" style="display: none;">
+                    <span id="userName"></span>
+                    <button id="logoutBtn">Çıkış</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h1>Online Eğitimde <span class="highlight">Geleceğin</span> Seninle Başlar</h1>
+                <p>Canlı dersler, sesli sohbet ve birebir DM ile öğrenmenin en kolay yolu</p>
+                <button class="cta-btn" id="getStartedBtn">Başla</button>
+            </div>
+        </section>
+
+        <!-- Courses Section -->
+        <section id="courses" class="courses">
+            <h2>Popüler Kurslar</h2>
+            <div class="course-grid">
+                <div class="course-card">
+                    <i class="fas fa-code"></i>
+                    <h3>Web Geliştirme</h3>
+                    <p>HTML, CSS, JavaScript ve React</p>
+                    <span class="price">₺499</span>
+                </div>
+                <div class="course-card">
+                    <i class="fas fa-mobile-alt"></i>
+                    <h3>Mobil Uygulama</h3>
+                    <p>React Native ile mobil geliştirme</p>
+                    <span class="price">₺599</span>
+                </div>
+                <div class="course-card">
+                    <i class="fas fa-database"></i>
+                    <h3>Veri Bilimi</h3>
+                    <p>Python, SQL ve Machine Learning</p>
+                    <span class="price">₺699</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Voice Chat Section -->
+        <section id="chat" class="chat-section" style="display: none;">
+            <h2><i class="fas fa-microphone"></i> Canlı Sesli Sohbet</h2>
+            <div class="voice-chat-container">
+                <div class="voice-controls">
+                    <button id="startVoice" class="voice-btn active">
+                        <i class="fas fa-microphone"></i> Mikrofonu Aç
+                    </button>
+                    <button id="stopVoice" class="voice-btn" style="display: none;">
+                        <i class="fas fa-stop"></i> Durdur
+                    </button>
+                    <div class="voice-status" id="voiceStatus">Mikrofon kapalı</div>
+                </div>
+                <div class="chat-messages" id="chatMessages"></div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Mesaj yaz...">
+                    <button id="sendChat"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- DM Section -->
+        <section id="dm" class="dm-section" style="display: none;">
+            <h2><i class="fas fa-envelope"></i> Özel Mesajlar</h2>
+            <div class="dm-container">
+                <div class="dm-contacts">
+                    <h3>Kişiler</h3>
+                    <div class="contact-list">
+                        <div class="contact active" data-user="hocam">👨‍🏫 Hocam</div>
+                        <div class="contact" data-user="admin">👨‍💼 Admin</div>
+                    </div>
+                </div>
+                <div class="dm-chat">
+                    <div class="dm-messages" id="dmMessages"></div>
+                    <div class="dm-input">
+                        <input type="text" id="dmInput" placeholder="Mesaj yaz...">
+                        <button id="sendDM"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
